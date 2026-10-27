@@ -680,7 +680,7 @@
     }
 
     .modal-desc {
-      font-size: 13px;
+      font-size: 16px;
       color: #5F6368;
       line-height: 1.4;
       margin-bottom: 22px;
@@ -1024,10 +1024,19 @@
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
-            </div>
-            <div class="modal-title">Search Phase Finished</div>
-            <div class="modal-desc">Thank you! Please click below to continue to the post-search survey.</div>
-            <button type="button" class="next-btn" onclick="goToPostSurvey()">Next</button>
+            </div>          
+              
+              <div class="modal-title">Search Phase Finished</div>
+              <div class="modal-desc">
+                Thank you! To receive your payment, please
+                <span class="highlight-text">complete the post-search survey</span>
+                and
+                <span class="highlight-text">return to Prolific</span>
+                to submit your participation. Click "Next" to continue to the survey.
+              </div>
+              <button type="button" class="next-btn" onclick="goToPostSurvey()">Next</button>
+
+
           </div>
         </div>
       </div>
@@ -1128,7 +1137,7 @@
       setTimeout(function() {
         document.getElementById("pageContentWrapper").classList.add("blurred");
         document.getElementById("modalOverlay").classList.add("active");
-      }, 60000);
+      }, 10000);
     }
 
     // 轉址到後測 SurveyMonkey 問卷
