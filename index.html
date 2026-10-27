@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>【Test】GSH</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #121212; /* 電腦版外圍深色背景 */
+      color: #1F1F1F;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+    }
+
+    /* --- PAGE 0: Instruction screen only --- */
+    .fullscreen-instruction {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      background: #FFFFFF;
+      color: #1F1F1F;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: max(20px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+      overflow-y: auto;
+    }
+    .fullscreen-instruction.hidden { display: none !important; }
+    .instruction-wrapper {
+      max-width: 680px;
+      width: 100%;
+      margin: auto 0;
+    }
+    .instruction-card {
+      width: 100%;
+      background: #FFFFFF;
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+    }
+    .instruction-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: #1F1F1F;
+      text-align: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #E8EAED;
+      margin-bottom: 22px;
+    }
+    .instruction-body {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #3C4043;
+    }
+    .instruction-body .instruction-intro { margin-bottom: 22px; }
+    .instruction-body .instruction-lead { font-weight: 600; margin-bottom: 14px; }
+    .instruction-steps { display: flex; flex-direction: column; gap: 18px; }
+    .instruction-step { display: flex; align-items: flex-start; gap: 14px; }
+    .instruction-step-number {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 0 0 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: #F1F3F4;
+      color: #202124;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .instruction-step-content { flex: 1; min-width: 0; }
+    .instruction-step-content strong {
+      display: block;
+      margin-bottom: 2px;
+      font-weight: 650;
+      color: #202124;
+    }
+    .highlight-text { color: #1A73E8; font-weight: 700; }
+    .instruction-footer {
+      border-top: 1px solid #E8EAED;
+      margin-top: 24px;
+      padding-top: 20px;
+    }
+    .instruction-checkbox-wrapper {
+      padding: 16px;
+      background: #F8F9FA;
+      border: 1px solid #E8EAED;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+    .instruction-checkbox-wrapper input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: #1A73E8;
+      flex-shrink: 0;
+    }
+    .instruction-checkbox-label {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1F1F1F;
+      cursor: pointer;
+    }
+    .instruction-warning-container { width: 100%; }
+    .instruction-warning {
+      display: none;
+      margin-top: 12px;
+      padding: 12px 16px;
+      background: #FCE8E6;
+      border: 1px solid #F5C6CB;
+      color: #D93025;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+    }
+    .instruction-actions {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      width: 100%;
+    }
+    .proceed-btn {
+      background: #1A73E8;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 24px;
+      padding: 13px 56px;
+      min-width: 176px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(26,115,232,0.3);
+      transition: background-color 0.2s, opacity 0.2s;
+    }
+    .proceed-btn:disabled {
+      background: #BDC1C6;
+      cursor: not-allowed;
+      box-shadow: none;
+      opacity: 0.7;
+    }
+    .proceed-btn:not(:disabled):hover { background: #1557B0; }
+    .proceed-btn:focus-visible, .instruction-checkbox-wrapper:focus-within {
+      outline: 2px solid #1A73E8;
+      outline-offset: 3px;
+    }
+    @media (max-width: 600px) {
+      .instruction-card { padding: 20px 16px; box-shadow: none; }
+      .instruction-title { font-size: 24px; }
+      .instruction-step { gap: 11px; }
+    }
+
+    /* --- 電腦 / 平板：手機外框 Wrapper --- */
+    .device-frame {
+      position: relative;
+      width: 390px;
+      height: 844px;
+      background: #FFFFFF;
+      border-radius: 50px;
+      box-shadow: 
+        0 0 0 12px #2d2d2d,
+        0 0 0 13px #1a1a1a,
+        0 20px 50px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 動態島 (Dynamic Island) 模擬 */
+    .dynamic-island {
+      position: absolute;
+      top: 11px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 115px;
+      height: 30px;
+      background-color: #000000;
+      border-radius: 20px;
+      z-index: 99;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10px;
+    }
+
+    /* 動態島裡面的鏡頭反光細節 */
+    .dynamic-island::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      background-color: #08081a;
+      border-radius: 50%;
+      border: 1px solid #1c1c38;
+    }
+
+    /* 手機內部容器 */
+    .app-container {
+      width: 100%;
+      height: 100%;
+      background-color: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 頁面切換 View 控制 */
+    .page-view {
+      display: none;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .page-view.active {
+      display: flex;
+    }
+
+    /* 整頁 UI 内容容器 (供搜尋結果頁整體模糊使用) */
+    .page-content-wrapper {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: filter 0.4s ease, opacity 0.4s ease;
+    }
+
+    .page-content-wrapper.blurred {
+      filter: blur(8px);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* 頂部狀態列 Status Bar */
+    .status-bar {
+      height: 48px;
+      padding: 14px 28px 0 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      z-index: 10;
+      background: #FFFFFF;
+      flex-shrink: 0;
+    }
+
+    .status-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 電量圖示容器 */
+    .battery-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .battery-body {
+      width: 22px;
+      height: 11.5px;
+      border: 1px solid #000;
+      border-radius: 3.5px;
+      padding: 1px;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .battery-body::after {
+      content: '';
+      position: absolute;
+      right: -3.5px;
+      top: 3px;
+      width: 2px;
+      height: 4px;
+      background-color: #000;
+      border-radius: 0 1px 1px 0;
+    }
+
+    .battery-fill {
+      width: 100%;
+      height: 100%;
+      background-color: #000;
+      border-radius: 1.5px;
+    }
+
+    /* --- 首頁 View 特有樣式 --- */
+    .home-main-content {
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      margin-top: 10vh;
+    }
+
+    .home-google-logo {
+      width: 160px;
+      margin-bottom: 24px;
+    }
+
+    .search-box-wrapper {
+      width: 100%;
+    }
+
+    /* 首頁搜尋框：修正縮放跑版問題 */
+    .home-search-box {
+      width: 100%;
+      height: 54px;
+      background-color: #F1F3F4;
+      border-radius: 27px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px 0 16px;
+      gap: 8px;
+      box-sizing: border-box;
+    }
+
+    .g-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .home-search-input {
+      flex: 1;
+      min-width: 0; /* 防止縮放時字體撐開外框 */
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 16px;
+      color: #1F1F1F;
+      font-weight: 500;
+      padding: 0;
+    }
+
+    .home-search-input::placeholder {
+      color: #5F6368;
+    }
+
+    .search-btn {
+      background: none;
+      border: none;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #5F6368;
+      border-radius: 50%;
+      flex-shrink: 0; /* 防止 Icon 在縮放時被擠壓 */
+      transition: background-color 0.15s ease;
+    }
+
+    .search-btn:active {
+      background-color: #E2E4E7;
+    }
+
+    .error-msg {
+      color: #d93025;
+      font-size: 14px;
+      margin-top: 10px;
+      display: none;
+      text-align: center;
+    }
+
+    /* --- 搜尋結果頁 View 特有樣式 --- */
+    .google-header {
+      background: #FFFFFF;
+      padding: 8px 16px 0;
+      flex-shrink: 0;
+      border-bottom: 1px solid #E8EAED;
+    }
+
+    .google-logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .hamburger-menu {
+      position: absolute;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .hamburger-menu span {
+      width: 18px;
+      height: 2px;
+      background-color: #5F6368;
+      border-radius: 1px;
+    }
+
+    .result-google-logo {
+      height: 26px;
+    }
+
+    /* 結果頁搜尋框：修正縮放跑版問題 */
+    .google-search-box {
+      display: flex;
+      align-items: center;
+      height: 44px;
+      background-color: #F1F3F4;
+      border-radius: 22px;
+      padding: 0 14px;
+      margin-bottom: 10px;
+      gap: 8px;
+      box-sizing: border-box;
+    }
+
+    .search-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0; /* 防止 Icon 在縮放時被擠壓 */
+    }
+
+    .result-search-input {
+      flex: 1;
+      min-width: 0; /* 防止縮放時字體撐開外框 */
+      border: none;
+      outline: none;
+      font-size: 15px;
+      color: #1F1F1F;
+      font-weight: 500;
+      background: transparent;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding: 0 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #5F6368;
+      scrollbar-width: none;
+    }
+
+    .nav-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-tab {
+      padding-bottom: 8px;
+      white-space: nowrap;
+      letter-spacing: 0.3px;
+    }
+
+    .nav-tab.active {
+      color: #1A73E8;
+      border-bottom: 3px solid #1A73E8;
+    }
+
+    .mobile-body {
+      flex: 1;
+      overflow-y: auto;
+      background-color: #F1F3F4;
+      padding: 12px;
+      position: relative;
+    }
+
+    .correction-notice {
+      font-size: 14px;
+      margin: 4px 4px 12px;
+      color: #202124;
+      background-color: #FFFFFF;
+      padding: 12px 14px;
+      border-radius: 12px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .correction-notice strong {
+      color: #1A0DAB;
+      font-weight: bold;
+    }
+
+    .result-item {
+      background: #FFFFFF;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .result-title {
+      font-size: 19px;
+      color: #1A0DAB;
+      text-decoration: none;
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 500;
+      line-height: 1.3;
+    }
+
+    .result-site {
+      font-size: 13px;
+      color: #4D5156;
+      margin-bottom: 6px;
+    }
+
+    /* 品牌搜尋結果 Logo：顯示於品牌網站資訊左側 */
+    .result-brand-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .result-brand-logo {
+      width: 30px;
+      height: 30px;
+      object-fit: contain;
+      flex-shrink: 0;
+      border-radius: 0%;
+      border: 0px solid #DADCE0;
+      padding: 0px;
+      transform: translateY(-5px);
+    }
+    .result-brand-details {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .result-snippet {
+      font-size: 15px;
+      color: #4D5156;
+      line-height: 1.5;
+    }
+
+    /* 底部導覽列 Bottom Toolbar */
+    .bottom-toolbar {
+      height: 56px;
+      background-color: #FFFFFF;
+      border-top: 1px solid #E8EAED;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 10px;
+      padding-bottom: env(safe-area-inset-bottom);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .toolbar-btn {
+      background: none;
+      border: none;
+      color: #B0B7C3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .toolbar-btn.active {
+      color: #5F6368;
+    }
+
+    .plus-btn {
+      width: 34px;
+      height: 34px;
+      background-color: #F1F3F4;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #5F6368;
+    }
+
+    .tab-count {
+      width: 20px;
+      height: 20px;
+      border: 2.2px solid #5F6368;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #5F6368;
+    }
+
+    /* 全頁中央彈窗遮罩 */
+    .modal-overlay {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    /* 方案 2：專業儀式感風 Modal 卡片樣式 */
+    .modal-card {
+      background: #FFFFFF;
+      padding: 28px 24px;
+      border-radius: 20px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+      text-align: center;
+      width: 100%;
+      max-width: 310px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: modalFadeIn 0.3s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.92);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .success-badge {
+      width: 52px;
+      height: 52px;
+      background-color: #E6F4EA;
+      color: #137333;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #202124;
+      margin-bottom: 6px;
+    }
+
+    .modal-desc {
+      font-size: 13px;
+      color: #5F6368;
+      line-height: 1.4;
+      margin-bottom: 22px;
+    }
+
+    .next-btn {
+      width: 100%;
+      background-color: #1A73E8;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 0;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .next-btn:active {
+      background-color: #1557B0;
+      transform: scale(0.98);
+    }
+
+    /* =========================================================
+       響應式設計：使用者直接用「手機」訪問時的樣式 (螢幕寬度 <= 600px)
+       ========================================================= */
+    @media (max-width: 600px) {
+      body {
+        background-color: #FFFFFF;
+      }
+
+      .instruction-card {
+        padding: 20px 16px;
+        box-shadow: none;
+      }
+
+      /* 移除手機外框樣式並適應真實手機高寬 */
+      .device-frame {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      /* 隱藏動態島、模擬頂部狀態列與模擬底部導覽列（防止出現雙層工具列） */
+      .dynamic-island,
+      .status-bar,
+      .bottom-toolbar {
+        display: none !important;
+      }
+
+      .google-header {
+        padding-top: max(12px, env(safe-area-inset-top));
+      }
+
+      .mobile-body {
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+      }
+
+      .home-main-content {
+        margin-top: 15vh;
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PAGE 0: 滿版 Instruction 頁面 (獨立於手機外框外) -->
+  <div id="instructionOverlay" class="fullscreen-instruction">
+    <div class="instruction-wrapper">
+      <div class="instruction-card">
+        <h2 class="instruction-title">Task Instructions</h2>
+        <div class="instruction-body">
+          <p class="instruction-intro">Imagine that you are considering purchasing a pair of headphones. You will use an online search tool to explore headphone brand recommendations before making a purchase decision.</p>
+          <p class="instruction-lead">Please follow the steps below:</p>
+          <div class="instruction-steps">
+            <div class="instruction-step">
+              <span class="instruction-step-number" aria-hidden="true">1</span>
+              <div class="instruction-step-content">
+                <strong>Search for recommendations</strong>
+                <p>On the next page, <span class="highlight-text">enter headphone brands recommendation</span> in the search bar and <span class="highlight-text">click the search button</span>.</p>
+              </div>
+            </div>
+            <div class="instruction-step">
+              <span class="instruction-step-number" aria-hidden="true">2</span>
+              <div class="instruction-step-content">
+                <strong>Review the search results</strong>
+                <p>Carefully review all the information presented on the page until further instructions appear on the screen.</p>
+              </div>
+            </div>
+            <div class="instruction-step">
+              <span class="instruction-step-number" aria-hidden="true">3</span>
+              <div class="instruction-step-content">
+                <strong>Answer the questions</strong>
+                <p>Base your answers solely on the information provided in the search results.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="instruction-footer">
+          <label class="instruction-checkbox-wrapper" onclick="handleCheckboxClick(event)">
+            <input type="checkbox" id="readCheckbox" onchange="toggleProceedBtn()">
+            <span class="instruction-checkbox-label">I have read and understood the instructions.</span>
+          </label>
+          <div class="instruction-warning-container">
+            <div id="instructionWarning" class="instruction-warning" role="alert">
+              Please read all the instructions carefully before beginning the study.
+            </div>
+          </div>
+          <div class="instruction-actions">
+            <button id="proceedBtn" class="proceed-btn" disabled onclick="startExperiment()">Start</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 手機邊框 Wrapper -->
+  <div class="device-frame">
+    <!-- 動態島 -->
+    <div class="dynamic-island"></div>
+
+    <!-- 模擬手機畫面容器 -->
+    <div class="app-container">
+
+      <!-- PAGE 1: 首頁 View -->
+      <div id="homeView" class="page-view active">
+        <!-- 頂部狀態列 -->
+        <div class="status-bar">
+          <span>9:41</span>
+          <div class="status-right">
+            <svg width="18" height="12" viewBox="0 0 18 12" fill="#000">
+              <rect x="0" y="8" width="3" height="4" rx="0.5"/>
+              <rect x="4.5" y="5" width="3" height="7" rx="0.5"/>
+              <rect x="9" y="2" width="3" height="10" rx="0.5"/>
+              <rect x="13.5" y="0" width="3" height="12" rx="0.5"/>
+            </svg>
+            <svg width="16" height="12" viewBox="0 0 16 12" fill="#000">
+              <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-4.24-2.12a6 6 0 018.48 0l-1.41 1.41a4 4 0 00-5.66 0L3.76 7.38zm-2.83-2.83a10 10 0 0114.14 0l-1.41 1.41a8 8 0 00-11.32 0L.93 4.55z"/>
+            </svg>
+            <div class="battery-container">
+              <div class="battery-body">
+                <div class="battery-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 主內容區 -->
+        <div class="home-main-content">
+          <img class="home-google-logo" src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" alt="Google Logo">
+
+          <div class="search-box-wrapper">
+            <form onsubmit="event.preventDefault(); performSearch();">
+              <div class="home-search-box">
+                <svg class="g-icon" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                
+                <input type="text" id="searchInput" class="home-search-input" placeholder="Search Google or type URL" autocomplete="off">
+                
+                <button type="button" class="search-btn" onclick="performSearch()" aria-label="Search">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </button>
+              </div>
+            </form>
+            <div id="errorMsg" class="error-msg">Please enter a keyword before searching.</div>
+          </div>
+        </div>
+
+        <!-- 底部導覽列 -->
+        <div class="bottom-toolbar">
+          <button class="toolbar-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
+          <button class="toolbar-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+          <div class="plus-btn">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
+          <button class="toolbar-btn active">
+            <div class="tab-count">1</div>
+          </button>
+          <button class="toolbar-btn active">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="5" cy="12" r="2.5"/>
+              <circle cx="12" cy="12" r="2.5"/>
+              <circle cx="19" cy="12" r="2.5"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+
+      <!-- PAGE 2: 搜尋結果 View -->
+      <div id="resultsView" class="page-view">
+        <div id="pageContentWrapper" class="page-content-wrapper">
+          <!-- 頂部狀態列 -->
+          <div class="status-bar">
+            <span>9:41</span>
+            <div class="status-right">
+              <svg width="18" height="12" viewBox="0 0 18 12" fill="#000">
+                <rect x="0" y="8" width="3" height="4" rx="0.5"/>
+                <rect x="4.5" y="5" width="3" height="7" rx="0.5"/>
+                <rect x="9" y="2" width="3" height="10" rx="0.5"/>
+                <rect x="13.5" y="0" width="3" height="12" rx="0.5"/>
+              </svg>
+              <svg width="16" height="12" viewBox="0 0 16 12" fill="#000">
+                <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-4.24-2.12a6 6 0 018.48 0l-1.41 1.41a4 4 0 00-5.66 0L3.76 7.38zm-2.83-2.83a10 10 0 0114.14 0l-1.41 1.41a8 8 0 00-11.32 0L.93 4.55z"/>
+              </svg>
+              <div class="battery-container">
+                <div class="battery-body">
+                  <div class="battery-fill"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Google 搜尋 Header -->
+          <div class="google-header">
+            <div class="google-logo-row">
+              <div class="hamburger-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <svg class="result-google-logo" viewBox="0 0 272 92">
+                <path fill="#ea4335" d="M115.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18C71.25 34.32 81.24 25 93.5 25s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44S80.99 39.2 80.99 47.18c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z"/>
+                <path fill="#fbbc05" d="M163.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18c0-12.85 9.99-22.18 22.25-22.18s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44s-12.51 5.46-12.51 13.44c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z"/>
+                <path fill="#4285f4" d="M209.75 26.34v39.82c0 16.38-9.66 23.07-21.08 23.07-10.75 0-17.22-7.19-19.66-13.07l8.48-3.53c1.51 3.61 5.21 7.89 11.18 7.89 7.31 0 11.84-4.54 11.84-13.01v-3.36h-.34c-2.18 2.69-6.38 5.04-11.68 5.04-11.09 0-21.25-9.66-21.25-22.09 0-12.52 10.16-22.26 21.25-22.26 5.29 0 9.49 2.35 11.68 4.96h.34v-3.45h9.49zm-8.99 21.01c0-7.89-5.21-13.53-12.02-13.53-6.89 0-12.69 5.64-12.69 13.53 0 7.81 5.8 13.35 12.69 13.35 6.81 0 12.02-5.54 12.02-13.35z"/>
+                <path fill="#34a853" d="M225 3v65h-9.5V3h9.5z"/>
+                <path fill="#ea4335" d="M262.02 54.48l7.56 5.04c-2.44 3.61-8.32 9.83-18.48 9.83-12.6 0-22.01-9.74-22.01-22.18 0-13.19 9.49-22.18 20.92-22.18 11.51 0 17.14 9.16 18.99 14.11l1.01 2.6-28.06 11.6c2.18 4.29 5.55 6.47 10.33 6.47 4.79 0 8.07-2.35 10.74-5.69zm-13.78-8.07l18.73-7.73c-1.01-2.52-3.95-4.29-7.56-4.29-4.71 0-11.34 4.12-11.17 12.02z"/>
+                <path fill="#4285f4" d="M35.29 41.41V32H67c.31 1.64.47 3.58.47 5.68 0 7.06-1.93 15.79-8.15 22.01-6.05 6.3-13.78 9.66-24.03 9.66C16.32 69.35 0 53.79 0 34.68 0 15.56 16.32 0 35.29 0c10.42 0 17.81 4.03 23.36 9.5l-6.55 6.55c-4.03-3.8-9.49-6.72-16.81-6.72-13.61 0-24.36 10.92-24.36 25.35s10.75 25.35 24.36 25.35c8.82 0 13.86-3.53 17.06-6.72 2.61-2.61 4.37-6.38 5.04-11.55H35.29z"/>
+              </svg>
+            </div>
+
+            <div class="google-search-box">
+              <svg class="search-icon" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <input type="text" id="resultSearchInput" class="result-search-input" readonly>
+            </div>
+
+            <div class="nav-tabs">
+              <span class="nav-tab active">ALL</span>
+              <span class="nav-tab">IMAGES</span>
+              <span class="nav-tab">MAPS</span>
+              <span class="nav-tab">VIDEOS</span>
+              <span class="nav-tab">NEWS</span>
+              <span class="nav-tab">BOOKS</span>
+            </div>
+          </div>
+
+          <!-- 搜尋結果內容區 -->
+          <div class="mobile-body">
+            <div id="resultsWrapper" class="results-wrapper">
+              <!-- 關鍵字修正提示 -->
+              <div id="correctionNotice" class="correction-notice" style="display: none;">
+                Showing results for: <strong id="targetKeywordText">headphone brands recommendation</strong>
+              </div>
+
+              <!-- 結果 1: Apple -->
+              <div class="result-item">
+                <div class="result-brand-header">
+                  <img class="result-brand-logo" src="data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDQxLjUgNTEiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDQxLjUgNTE7IiB4bWw6c3BhY2U9InByZXNlcnZlIj4KIDxtZXRhZGF0YT4KICAKICAgCiAgIAogICAKICAgCiAgCiA8L21ldGFkYXRhPgogPGc+CiAgPHBhdGggZD0iTTQwLjIsMTcuNGMtMy40LDIuMS01LjUsNS43LTUuNSw5LjdjMCw0LjUsMi43LDguNiw2LjgsMTAuM2MtMC44LDIuNi0yLDUtMy41LDcuMmMtMi4yLDMuMS00LjUsNi4zLTcuOSw2LjNzLTQuNC0yLTguNC0yJiN4QTsmI3g5OyYjeDk7Yy0zLjksMC01LjMsMi4xLTguNSwyLjFzLTUuNC0yLjktNy45LTYuNUMyLDM5LjUsMC4xLDMzLjcsMCwyNy42YzAtOS45LDYuNC0xNS4yLDEyLjgtMTUuMmMzLjQsMCw2LjIsMi4yLDguMywyLjImI3hBOyYjeDk7JiN4OTtjMiwwLDUuMi0yLjMsOS0yLjNDMzQuMSwxMi4yLDM3LjksMTQuMSw0MC4yLDE3LjR6IE0yOC4zLDguMUMzMCw2LjEsMzAuOSwzLjYsMzEsMWMwLTAuMywwLTAuNy0wLjEtMWMtMi45LDAuMy01LjYsMS43LTcuNSwzLjkmI3hBOyYjeDk7JiN4OTtjLTEuNywxLjktMi43LDQuMy0yLjgsNi45YzAsMC4zLDAsMC42LDAuMSwwLjljMC4yLDAsMC41LDAuMSwwLjcsMC4xQzI0LjEsMTEuNiwyNi42LDEwLjIsMjguMyw4LjF6Ij4KICA8L3BhdGg+CiA8L2c+Cjwvc3ZnPg==" alt="Apple Logo">
+                  <div class="result-brand-details">
+                    <a href="#" class="result-title" onclick="return false;">Apple</a>
+                    <div class="result-site">https://www.apple.com›airpods</div>
+                  </div>
+                </div>
+                <div class="result-snippet">Apple is a consumer technology brand, known for its seamless device connectivity and advanced noise cancellation technology. The AirPods series combines effortless setup with high-quality sound, ideal for users who value convenient wireless listening and innovative audio experiences.</div>
+              </div>
+
+              <!-- 結果 2: Beats -->
+              <div class="result-item">
+                <div class="result-brand-header">
+                  <img class="result-brand-logo" src="data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDQzLjMgNDMuMyIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNDMuMyA0My4zOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CiA8c3R5bGUgdHlwZT0idGV4dC9jc3MiPgogIC5zdDB7ZmlsbDojRTMxODM2O30KIDwvc3R5bGU+CiA8bWV0YWRhdGE+CiAgCiAgIAogICAKICAgCiAgIAogIAogPC9tZXRhZGF0YT4KIDxnPgogIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0yMS42LDI4LjFjMy42LDAsNi41LTIuOSw2LjUtNi41YzAtMy42LTIuOS02LjUtNi41LTYuNWMtMy42LDAtNi41LDIuOS02LjUsNi41djAmI3hBOyYjeDk7JiN4OTtDMTUuMiwyNS4yLDE4LjEsMjguMSwyMS42LDI4LjEiPgogIDwvcGF0aD4KICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMjEuNiwwYy0yLjMsMC00LjQsMC4zLTYuNSwxdjEyYzEuOC0xLjQsNC4xLTIuMiw2LjUtMi4yYzYsMCwxMC44LDQuOSwxMC44LDEwLjhjMCw2LTQuOCwxMC44LTEwLjgsMTAuOCYjeEE7JiN4OTsmI3g5O2MtNiwwLTEwLjgtNC44LTEwLjgtMTAuOFYyLjlDNC40LDYuNiwwLDEzLjYsMCwyMS42YzAsMTIsOS43LDIxLjYsMjEuNiwyMS42YzEyLDAsMjEuNi05LjcsMjEuNi0yMS42QzQzLjMsOS43LDMzLjYsMCwyMS42LDAiPgogIDwvcGF0aD4KIDwvZz4KPC9zdmc+" alt="Beats Logo">
+                  <div class="result-brand-details">
+                    <a href="#" class="result-title" onclick="return false;">Beats</a>
+                    <div class="result-site">https://www.beatsbydre.com›headphones</div>
+                  </div>
+                </div>
+                <div class="result-snippet">Beats is a lifestyle audio brand, recognized for its iconic sound and bold, contemporary design. The Studio series combines personalized spatial audio with immersive sound performance, ideal for users who value engaging music experiences and individual expression.</div>
+              </div>
+
+              <!-- 結果 3: JBL -->
+              <div class="result-item">
+                <div class="result-brand-header">
+                  <img class="result-brand-logo" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTI3cHgiIGhlaWdodD0iNDk2cHgiIHZpZXdCb3g9IjAgMCA1MjcgNDk2IiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPgogCiA8dGl0bGU+CiAgbG9nbwogPC90aXRsZT4KIDxkZXNjPgogIENyZWF0ZWQgd2l0aCBTa2V0Y2guCiA8L2Rlc2M+CiA8ZGVmcz4KIDwvZGVmcz4KIDxnIGlkPSJTeW1ib2xzIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4KICA8ZyBpZD0iU3RhdGljLS8tbG9nbyI+CiAgIDxnIGlkPSJsb2dvIj4KICAgIDxwYXRoIGQ9Ik01MTMuMTIzLDM5OC4wNTIgQzUwNS40NzYsMzk4LjA1MiA0OTkuMjUyLDM5MS44NzkgNDk5LjI1MiwzODQuMjIyIEM0OTkuMjUyLDM3Ni42MTkgNTA1LjQ3NiwzNzAuMzkxIDUxMy4xMjMsMzcwLjM5MSBDNTIwLjc3LDM3MC4zOTEgNTI3LDM3Ni42MTkgNTI3LDM4NC4yMjIgQzUyNywzOTEuODc5IDUyMC43NywzOTguMDUyIDUxMy4xMjMsMzk4LjA1MiBaIE01MTMuMTIzLDM3My4wMzQgQzUwNi45MDYsMzczLjAzNCA1MDEuODYzLDM3OC4wNDIgNTAxLjg2MywzODQuMjIyIEM1MDEuODYzLDM5MC40NDkgNTA2LjkwNiwzOTUuNDY0IDUxMy4xMjMsMzk1LjQ2NCBDNTE5LjM1MywzOTUuNDY0IDUyNC4zODMsMzkwLjQ0OSA1MjQuMzgzLDM4NC4yMjIgQzUyNC4zODMsMzc4LjA0MiA1MTkuMzUzLDM3My4wMzQgNTEzLjEyMywzNzMuMDM0IFogTTUxNi42NTUsMzkyLjA0MiBMNTEyLjcxNiwzODUuMzIgTDUxMC40MjUsMzg1LjMyIEw1MTAuNDI1LDM5Mi4wNDIgTDUwNy44MTUsMzkyLjA0MiBMNTA3LjgxNSwzNzYuMzk1IEw1MTMuNjE4LDM3Ni4zOTUgQzUxNy40ODIsMzc2LjM5NSA1MTkuNTU3LDM3Ny42ODkgNTE5LjU1NywzODAuOTgzIEM1MTkuNTU3LDM4My44MjIgNTE3Ljc2NywzODQuOTQ3IDUxNS4zMzMsMzg1LjIwNCBMNTE5LjY1OCwzOTIuMDQyIEw1MTYuNjU1LDM5Mi4wNDIgWiBNNTE2LjkxOSwzODAuNzU5IEM1MTYuOTE5LDM3OC44OTYgNTE1LjE1LDM3OC41NSA1MTMuNjE4LDM3OC41NSBMNTEwLjQyNSwzNzguNTUgTDUxMC40MjUsMzgzLjE1MSBMNTEzLjU3LDM4My4xNTEgQzUxNS40MTQsMzgzLjE1MSA1MTYuOTE5LDM4Mi44ODcgNTE2LjkxOSwzODAuNzU5IFogTTAsMCBMNDg1LjcxMywwIEw0ODUuNzEzLDM5Ny42MzEgTDAsMzk3LjYzMSBMMCwwIFogTTMuNjI5LDQ3MS43OTQgQzUuNDUzLDQ2OS45ODQgNy4xMjcsNDY4LjkyMSA5LjkyNyw0NjguOTIxIEMxNC41MjMsNDY4LjkyMSAxNy43MTYsNDcyLjQ2NCAxNy43MTYsNDc3LjU0IEMxNy43MTYsNDgzLjQ4MyAxMy44NTksNDg3LjI5OCA3Ljk0Nyw0ODcuMjk4IEM1Ljg0Niw0ODcuMjk4IDQuMTMxLDQ4Ni45MDUgMS43NTgsNDg1Ljk2MyBMMS43NTgsNDYwLjEwNCBMMy42MjksNDYwLjEwNCBMMy42MjksNDcxLjc5NCBaIE0zLjYyOSw0ODQuNjI4IEM1LjE4MSw0ODUuMjE4IDYuNTQ0LDQ4NS40NDggNy45MDcsNDg1LjQ0OCBDMTIuNDYyLDQ4NS40NDggMTUuNzMsNDgyLjE4MiAxNS43Myw0NzcuNjU1IEMxNS43Myw0NzMuNDg4IDEzLjIwMSw0NzAuNDkzIDkuNjk2LDQ3MC40OTMgQzcuNTIsNDcwLjQ5MyA1LjczMSw0NzEuNTE2IDMuNjI5LDQ3My45MjEgTDMuNjI5LDQ4NC42MjggWiBNMjIuMTg4LDQ2OS4yNzQgTDI4LjUzMyw0ODEuNjM0IEwzNC41NjcsNDY5LjI3NCBMMzYuNDcyLDQ2OS4yNzQgTDIzLjM5NSw0OTYgTDIxLjQ5LDQ5NiBMMjcuNTk4LDQ4My41MjUgTDIwLjI0Miw0NjkuMjc0IEwyMi4xODgsNDY5LjI3NCBaIE02My43MTMsNDU0LjY3NiBMOTQuNTkzLDQ1NC42NzYgTDk0LjU5Myw0MjcuNzk0IEwxMDcuMTAxLDQyNy43OTQgTDEwNy4xMDEsNDg4LjMyNyBMMTAyLjMwOCw0ODguMzI3IEMxMDEuNTg5LDQ4OC4zMjcgMTAwLjgwMyw0ODguMjUzIDk5LjkwOCw0ODguMDk3IEM5OC45ODYsNDg3LjkyOCA5OC4xMzgsNDg3LjYxNiA5Ny4zNjYsNDg3LjE1NSBDOTYuNTczLDQ4Ni42ODEgOTUuOTAxLDQ4Ni4wMTcgOTUuMzczLDQ4NS4xNzYgQzk0Ljg0NCw0ODQuMzA5IDk0LjU3OSw0ODMuMTg0IDk0LjU3OSw0ODEuODE1IEw5NC41OTMsNDYwLjEwNCBMNjMuNzEzLDQ2MC4xMDQgTDYzLjcxMyw0ODguMzI3IEw1MS4yMTIsNDg4LjMyNyBMNTEuMjEyLDQyNy43OTQgTDYzLjcxMyw0MjcuNzk0IEw2My43MTMsNDU0LjY3NiBaIE0xNTQuNTMyLDQyNi40NDkgTDE4NS44MTksNDg4LjMyNCBMMTc4LjExNyw0ODguMzI0IEMxNzYuMjE5LDQ4OC4zMjQgMTc0LjY1Myw0ODcuOTc4IDE3My40NTMsNDg3LjE5OSBDMTcyLjI2LDQ4Ni40NCAxNzEuMjQzLDQ4NS4yIDE3MC40MjksNDgzLjUxOSBMMTYzLjIyMyw0NjkuMDc5IEwxNDAuNDQ0LDQ2OS4wNzkgTDE0My42MTcsNDYyLjkwNiBMMTYwLjA3Nyw0NjIuOTA2IEwxNDkuODI3LDQ0Mi41NTYgTDEyNi4xMDYsNDg4LjMxNyBMMTE4LjgwNSw0ODguMzE3IEwxNTAuODcxLDQyNi40NDkgTDE1NC41MzIsNDI2LjQ0OSBaIE0yMzYuMTkzLDQzMC43NzIgQzI0Mi4zODksNDMzLjkxIDI0NS4wMTMsNDM4LjMyMSAyNDUuMDEzLDQ0My45MTIgQzI0NS4wMTMsNDQ5LjUwOSAyNDEuNzA1LDQ1Ni4xMDkgMjI5Ljg0OCw0NTkuNDI5IEwyNTMuNzMxLDQ4OC4zMTcwMTYgTDI0NC4xNTIsNDg4LjMxNyBDMjQ0LjE1Miw0ODguMzE3IDI0Mi4xMzgsNDg4LjMzMSAyMzkuNzkzLDQ4Ny41MjQgQzIzNy40NDcsNDg2LjcxOCAyMzQuOTEyLDQ4My40NjUgMjM0LjkxMiw0ODMuNDY1IEwyMTYuNDc5LDQ2MC42NDkgTDIxMC4wNzIsNDYwLjY0OSBMMjEwLjA3Miw0ODguMzEgTDE5Ny41NzEsNDg4LjMxIEwxOTcuNTcxLDQyNy43ODQgTDIyMC41MTksNDI3Ljc4NCBDMjIwLjUxOSw0MjcuNzg0IDIyOS45OSw0MjcuNjM1IDIzNi4xOTMsNDMwLjc3MiBaIE0yMTAuMDM4LDQzMy4xMDMgTDIxMC4wMzgsNDU2LjAzNSBMMjE1LjgyMSw0NTYuMDM1IEMyMTUuODIxLDQ1Ni4wMzUgMjIxLjU2Myw0NTYuMTIzIDIyNS4yOTIsNDUzLjk2MSBDMjI5LjAyNyw0NTEuNzk5IDIzMS42NjUsNDQ4Ljc5MSAyMzEuNjY1LDQ0NC4yOTggQzIzMS42NjUsNDM5LjgwNSAyMjguODE3LDQzNS44MjEgMjI0Ljc5LDQzNC4yNDkgQzIyNC43OSw0MzQuMjQ5IDIyMi40ODUsNDMzLjEwMyAyMTguMzc3LDQzMy4xMDMgTDIxMC4wMzgsNDMzLjEwMyBaIE0zMDIuMjY0LDQ3Mi42MjQgTDMyNi43Myw0MjcuNzkyIEwzMzguOTYxLDQyNy43OTIgTDMzOC45NjEsNDg4LjMyNSBMMzM0LjE2OCw0ODguMzI1IEMzMzMuNDM1LDQ4OC4zMjUgMzMyLjY0OSw0ODguMjM3IDMzMS43NjEsNDg4LjA4OCBDMzMwLjg1Miw0ODcuOTI1IDMyOS45OTgsNDg3LjYwNyAzMjkuMjE4LDQ4Ny4xNDYgQzMyOC40MjUsNDg2LjY2NSAzMjcuNzU0LDQ4NS45OTQgMzI3LjIzOSw0ODUuMTYxIEMzMjYuNzAzLDQ4NC4zIDMyNi40MTksNDgzLjE3NSAzMjYuNDE5LDQ4MS44MDYgTDMyNi40MTksNDQxLjc0NCBMMzAwLjg0LDQ4OC4zMjUgTDI5Ny41NzksNDg4LjMyNSBMMjcxLjMxNiw0NDEuMzc4IEwyNzEuMzE2LDQ4OC4zMjUgTDI2NC45MzcsNDg4LjMyNSBMMjY0LjkzNyw0MjcuNzkyIEwyNzcuMzE2LDQyNy43OTIgTDMwMi4yNjQsNDcyLjYyNCBaIE0zODYuMTE2LDQyNi40NDcgTDQxNy4zNjksNDg4LjMyMiBMNDA5LjczNSw0ODguMzIyIEM0MDcuODM3LDQ4OC4zMjIgNDA2LjI2NCw0ODcuOTcgNDA1LjA2NCw0ODcuMTkgQzQwMy44NzgsNDg2LjQzMSA0MDIuODYxLDQ4NS4xOTEgNDAyLjA0OCw0ODMuNTExIEwzODEuNDA0LDQ0Mi41NjEgTDM3MC44NzYsNDYyLjkwNCBMMzg3LjI1NSw0NjIuOTA0IEwzOTAuMzk0LDQ2OS4wNzcgTDM2Ny42OSw0NjkuMDc3IEwzNTcuNzQ1LDQ4OC4zMjkgTDM1MC40MzYsNDg4LjMyOSBMMzgyLjQ0OSw0MjYuNDQ3IEwzODYuMTE2LDQyNi40NDcgWiBNNDc4LjU0MSw0NzAuMTI5IEw0NzguNTQxLDQzMS4xMDQgQzQ3OC41NDEsNDMwLjQyIDQ3OC42ODMsNDI5LjgzNyA0NzguOTYxLDQyOS4zODMgQzQ3OS4yMTksNDI4Ljk2MyA0NzkuNTcxLDQyOC42MTcgNDc5Ljk5MSw0MjguMzYgQzQ4MC4zNzgsNDI4LjEyOSA0ODAuODA1LDQyNy45NzMgNDgxLjI1Miw0MjcuODg1IEM0ODEuNjkzLDQyNy44MTggNDgyLjA2Niw0MjcuNzkgNDgyLjQwNSw0MjcuNzkgTDQ4NS43MDcsNDI3Ljc5IEw0ODUuNzA3LDQ4OC4zMjQgTDQ4NC44MzgsNDg4LjMyNCBDNDgyLjUyNyw0ODguMzI0IDQ4MC4xNDcsNDg4LjQ1MyA0NzguNDE5LDQ4Ni44MiBMNDM2LjE5LDQ0Mi42ODUgTDQzNi4xOSw0ODguMzI0IEw0MjguODk2LDQ4OC4zMjQgTDQyOC44OTYsNDI3Ljc5IEw0MzYuOTIyLDQyNy43OSBMNDc4LjU0MSw0NzAuMTI5IFoiIGlkPSJCYWNrIiBmaWxsPSIjRkYzMzAwIj4KICAgIDwvcGF0aD4KICAgIDxnIGlkPSJKQkwiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDk5LjAwMDAwMCwgMTE1LjAwMDAwMCkiIGZpbGw9IiNGRkZGRkYiPgogICAgIDxwYXRoIGQ9Ik0yMTguNzE0LDE2Ni42NjcgTDMwMS44ODMsMTY2LjY2NyBMMzAxLjg4MywxMTMuNjQyIEwyNzQuNDI3LDExMy42NDIgTDI3NC40NDcsMTQyLjYzMSBDMjc0LjQ0NywxNTAuNDA0IDI2OC4xMTUsMTU2LjczMyAyNjAuMzA1LDE1Ni43MzMgQzI1Mi41MDIsMTU2LjczMyAyNDYuMTYzLDE1MC40MDQgMjQ2LjE2MywxNDIuNjMxIEwyNDYuMTYzLDAuMTQ0IEwyMTguNzE0LDAuMTQ0IEwyMTguNzE0LDE2Ni42NjcgWiIgaWQ9IlBhdGgiPgogICAgIDwvcGF0aD4KICAgICA8cGF0aCBkPSJNMTE2LjQyNywxNjYuNjY3IEwxMTYuNDI3LDAuMTQ0IEwxNzEuMzA2LDAuMTQ0IEMxODEuODk1LDAuMTQ0IDE5OC43NDIsOC44MzggMTk4Ljc0MiwyNy4yNzcgTDE5OC43NDIsNTUuNjQzIEMxOTguNzQyLDYzLjkzNyAxOTEuNDY4LDc4LjYzNSAxODAuNjYxLDc4LjYzNSBDMTkxLjQ2OCw3OC42MzUgMTk4Ljc0Miw4Ny45NDYgMTk4Ljc0Miw5NSBMMTk4Ljc0MiwxNDQuOTE1IEMxOTguNzQyLDE1My40MDUgMTkxLjg4OCwxNjYuNjY3IDE3MS4zMDYsMTY2LjY2NyBMMTE2LjQyNywxNjYuNjY3IFogTTE1OC44MzIsNzEuODM4IEMxNjguODExLDcxLjgzOCAxNzEuMzA2LDcwLjE1OCAxNzEuMzA2LDQ0LjA1NSBDMTcxLjMwNiwxNy45NTkgMTY4LjgxMSwxNS44NzkgMTU4LjgzMiwxNS44NzkgTDE0My44NDMsMTUuODc5IEwxNDMuODQzLDcxLjc5OCBMMTU4LjgzMiw3MS44MzggWiBNMTcxLjMwNiwxMTkuNjQ2IEMxNzEuMzA2LDkzLjUzNiAxNzEuMzA2LDg1Ljg5MiAxNjAuNDcyLDg1Ljg5MiBMMTQzLjg0Myw4NS44OTIgTDE0My44NDMsMTUyLjk4NSBMMTYwLjQ3MiwxNTMuMDE5IEMxNzEuMzA2LDE1My4wMTkgMTcxLjMwNiwxNDUuNzM1IDE3MS4zMDYsMTE5LjY0NiBaIiBpZD0iQ29tYmluZWQtU2hhcGUiPgogICAgIDwvcGF0aD4KICAgICA8cGF0aCBkPSJNMTIuNDQ2LDEzNy42NjQgQzEyLjQ0NiwxNDkuNjcyIDIzLjI1OSwxNjkuMTQgNTQuMDIzLDE2OS4xNCBDODQuNzk1LDE2OS4xNCA5NS42MTUsMTU0LjI0NiA5NS42MTUsMTM3LjY2NCBMOTUuNjE1LDAuMTQ0IEw2OC4xNTgsMC4xNDQgTDY4LjE3MiwxNDIuNDQxIEM2OC4xNzIsMTUwLjIxNCA2MS44NTMsMTU2LjczMyA1NC4wNDQsMTU2LjczMyBDNDYuMjI3LDE1Ni43MzMgMzkuODk1LDE1MC40MDQgMzkuODk1LDE0Mi42MzEgTDM5Ljg3NSwxMTMuNjQyIEwxMi40NDYsMTEzLjY0MiBMMTIuNDQ2LDEzNy42NjQgWiIgaWQ9IlBhdGgiPgogICAgIDwvcGF0aD4KICAgICA8cGF0aCBkPSJNMjYuMTY3LDk1LjUwMSBDMzQuOTI2LDk1LjUwMSA0Mi4wNDQsODguNDA2IDQyLjA0NCw3OS42ODUgQzQyLjA0NCw3MC45MjMgMzQuOTI2LDYzLjg1NiAyNi4xNjcsNjMuODU2IEMxNy4zODEsNjMuODU2IDEwLjI4Myw3MC45MjMgMTAuMjgzLDc5LjY4NSBDMTAuMjgzLDg4LjQwNiAxNy4zODEsOTUuNTAxIDI2LjE2Nyw5NS41MDEgWiIgaWQ9IlBhdGgiPgogICAgIDwvcGF0aD4KICAgICA8cG9seWdvbiBpZD0iUGF0aCIgcG9pbnRzPSIyNi4xNjcgNTcuNzE2IDUxLjUyOSAwLjE0NCAwLjc5OSAwLjE0NCI+CiAgICAgPC9wb2x5Z29uPgogICAgPC9nPgogICA8L2c+CiAgPC9nPgogPC9nPgo8L3N2Zz4=" alt="JBL Logo">
+                  <div class="result-brand-details">
+                    <a href="#" class="result-title" onclick="return false;">JBL</a>
+                    <div class="result-site">https://www.jbl.com›headphones</div>
+                  </div>
+                </div>
+                <div class="result-snippet">JBL is an audio equipment brand, valued for its professional sound heritage and signature Pure Bass Sound. The Tune series delivers powerful bass reproduction with lightweight, comfortable construction, ideal for users who value dynamic audio performance and everyday listening comfort.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 底部導覽列 -->
+          <div class="bottom-toolbar">
+            <button class="toolbar-btn">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <button class="toolbar-btn">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+            <div class="plus-btn">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+            <button class="toolbar-btn active">
+              <div class="tab-count">1</div>
+            </button>
+            <button class="toolbar-btn active">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="5" cy="12" r="2.5"/>
+                <circle cx="12" cy="12" r="2.5"/>
+                <circle cx="19" cy="12" r="2.5"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 中央彈窗遮罩：方案 2 專業儀式感風 -->
+        <div id="modalOverlay" class="modal-overlay">
+          <div class="modal-card">
+            <div class="success-badge">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <div class="modal-title">Search Phase Finished</div>
+            <div class="modal-desc">Thank you! Please click below to continue to the post-search survey.</div>
+            <button type="button" class="next-btn" onclick="goToPostSurvey()">Next</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const TARGET_KEYWORD = "top 3 laptop brand recommendations";
+
+    // 紀錄 Instruction 頁面載入時間，用於計算至少閱讀 5 秒
+    let pageLoadTime = Date.now();
+
+    // 從當前網址獲取 Prolific 相關參數
+    const urlParams = new URLSearchParams(window.location.search);
+    const prolificPID = urlParams.get("PROLIFIC_PID") || "";
+    const sessionID = urlParams.get("SESSION_ID") || "";
+    const condition = urlParams.get("Condition") || "";
+
+    document.addEventListener("DOMContentLoaded", function() {
+      pageLoadTime = Date.now(); // 記錄進入頁面的時間點
+
+      const searchInput = document.getElementById("searchInput");
+
+      // 監聽 Enter 鍵輸入
+      searchInput.addEventListener("keydown", function(event) {
+        if (event.key === "Enter" || event.keyCode === 13) {
+          event.preventDefault();
+          event.stopPropagation();
+          performSearch();
+          return false;
+        }
+      });
+    });
+
+    // 處理受試者點擊 Checkbox 時的 5 秒限制邏輯
+    function handleCheckboxClick(event) {
+      const currentTime = Date.now();
+      const timeSpent = (currentTime - pageLoadTime) / 1000;
+      const warningBox = document.getElementById("instructionWarning");
+      const checkbox = document.getElementById("readCheckbox");
+
+      if (timeSpent < 5) {
+        // 未滿 5 秒：阻止勾選動作並顯示提示
+        event.preventDefault();
+        checkbox.checked = false;
+        warningBox.style.display = "block";
+        toggleProceedBtn();
+      } else {
+        // 滿 5 秒：允許勾選並隱藏警告提示
+        warningBox.style.display = "none";
+      }
+    }
+
+    // 切換 Instruction 按鈕啟用/禁用狀態
+    function toggleProceedBtn() {
+      const checkbox = document.getElementById("readCheckbox");
+      const proceedBtn = document.getElementById("proceedBtn");
+      proceedBtn.disabled = !checkbox.checked;
+    }
+
+    // 關閉Instruction頁面，開始測試（進入手機模擬介面）
+    function startExperiment() {
+      document.getElementById("instructionOverlay").classList.add("hidden");
+    }
+
+    // 執行搜尋與切換頁面
+    function performSearch() {
+      const input = document.getElementById("searchInput");
+      const errorMsg = document.getElementById("errorMsg");
+      const userRawQuery = input.value;
+
+      // 隱蔽規則：至少包含 1 個字元
+      if (userRawQuery.length < 1) {
+        errorMsg.style.display = "block";
+        return;
+      }
+
+      errorMsg.style.display = "none";
+
+      // 填入搜尋結果頁的輸入框
+      document.getElementById("resultSearchInput").value = userRawQuery;
+
+      // 判斷是否需要顯示修正提示
+      const isCorrect = userRawQuery.trim().toLowerCase() === TARGET_KEYWORD.toLowerCase();
+      const noticeBox = document.getElementById("correctionNotice");
+      if (!isCorrect && userRawQuery.trim() !== '') {
+        noticeBox.style.display = "block";
+      } else {
+        noticeBox.style.display = "none";
+      }
+
+      // 切換 View：隱藏首頁，顯示結果頁
+      document.getElementById("homeView").classList.remove("active");
+      document.getElementById("resultsView").classList.add("active");
+
+      // 開始 60 秒倒數，時間到後執行模糊與開啟 Modal
+      setTimeout(function() {
+        document.getElementById("pageContentWrapper").classList.add("blurred");
+        document.getElementById("modalOverlay").classList.add("active");
+      }, 60000);
+    }
+
+    // 轉址到後測 SurveyMonkey 問卷
+    function goToPostSurvey() {
+      const surveyURL = new URL("https://zh.surveymonkey.com/r/JMQMVQR?PROLIFIC_PID=[PROLIFIC_PID_value]&SESSION_ID=[SESSION_ID_value]&Condition=[Condition_value]");
+
+      if (prolificPID) surveyURL.searchParams.set("PROLIFIC_PID", prolificPID);
+      if (sessionID) surveyURL.searchParams.set("SESSION_ID", sessionID);
+      if (condition) surveyURL.searchParams.set("Condition", condition);
+
+      window.location.assign(surveyURL.toString());
+    }
+  </script>
+
+</body>
+</html>
